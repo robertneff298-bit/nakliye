@@ -3,89 +3,695 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dostlar Nakliyat — İstanbul Nakliyeci</title>
-  <meta http-equiv="refresh" content="3; url=https://www.google.com.tr">
+  <title>Dostlar Nakliyat — İstanbul'un Güvenilir Nakliyecisi</title>
   <style>
-    :root{--brand:#0b3d91;--accent:#2b8a3e;--muted:#6b7280;--bg:#f5f7fb}
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg); color:#111}
-    .container{max-width:900px;margin:28px auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 6px 24px rgba(11,61,145,0.06)}
-    header{display:flex;align-items:center;gap:16px}
-    .logo{font-weight:700;color:var(--brand);font-size:1.6rem}
-    .tag{color:var(--muted);font-size:0.95rem}
-    .hero{margin-top:18px;padding:18px;border-radius:8px;background:linear-gradient(90deg,rgba(11,61,145,0.06),rgba(43,138,62,0.03))}
-    h1{margin:0;color:var(--brand)}
-    .lead{color:var(--muted);margin-top:8px}
-    .contact{margin-top:12px}
-    .btn{display:inline-block;padding:10px 14px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600}
-    article{margin-top:20px;line-height:1.75;color:#222}
-    h2{color:var(--brand);margin-top:0}
-    footer{margin-top:20px;color:var(--muted);font-size:0.9rem}
-    .redirect-note{margin-top:12px;color:#444;font-size:0.95rem}
-    @media (max-width:600px){.container{margin:12px;padding:16px}.logo{font-size:1.4rem}}
-  </style>
-  <script>
-    // JS fallback yönlendirme ve geri sayım
-    let seconds = 3;
-    function startCountdown(){
-      const el = document.getElementById('countdown');
-      if(!el) return;
-      el.textContent = seconds;
-      const t = setInterval(()=>{
-        seconds -= 1;
-        if(seconds <= 0){
-          clearInterval(t);
-          window.location.href = 'https://www.google.com.tr';
-        } else el.textContent = seconds;
-      }, 1000);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #0b3d91;
+      --secondary: #2b8a3e;
+      --accent: #f59e0b;
+      --dark: #1e293b;
+      --light: #f8fafc;
+      --gray: #64748b;
     }
-    window.addEventListener('DOMContentLoaded', startCountdown);
-  </script>
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--light);
+    }
+    
+    .analytics-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(11, 61, 145, 0.95);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      animation: slideIn 0.5s ease;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(150%); }
+      to { transform: translateX(0); }
+    }
+    
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+      color: white;
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo::before {
+      content: "🚚";
+      font-size: 2rem;
+    }
+    
+    .header-phone {
+      background: var(--secondary);
+      padding: 10px 20px;
+      border-radius: 25px;
+      text-decoration: none;
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .header-phone:hover {
+      background: #238636;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(43, 138, 62, 0.4);
+    }
+    
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, rgba(11, 61, 145, 0.95) 0%, rgba(30, 64, 175, 0.95) 100%),
+                  url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%230b3d91" width="1200" height="600"/><circle cx="200" cy="100" r="150" fill="%231e40af" opacity="0.1"/><circle cx="1000" cy="500" r="200" fill="%232563eb" opacity="0.1"/></svg>');
+      background-size: cover;
+      background-position: center;
+      color: white;
+      padding: 80px 20px;
+      text-align: center;
+    }
+    
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      animation: fadeInDown 0.8s ease;
+    }
+    
+    .hero p {
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+      opacity: 0.95;
+      animation: fadeInUp 0.8s ease;
+    }
+    
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeIn 1s ease 0.3s both;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .btn {
+      padding: 15px 35px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #238636;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(43, 138, 62, 0.4);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--light);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Features */
+    .features {
+      max-width: 1200px;
+      margin: -50px auto 60px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+    }
+    
+    .feature-card {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: all 0.3s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+    
+    .feature-card h3 {
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+    
+    .feature-card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+    
+    /* Content Section */
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 50px;
+      position: relative;
+      padding-bottom: 20px;
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: var(--secondary);
+      border-radius: 2px;
+    }
+    
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    .content-card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .content-card h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      font-size: 1.4rem;
+    }
+    
+    .content-card p {
+      color: var(--gray);
+      line-height: 1.8;
+    }
+    
+    /* Price Calculator */
+    .calculator {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      padding: 50px 20px;
+      margin: 60px 0;
+    }
+    
+    .calculator-content {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .calculator h2 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--dark);
+      font-weight: 600;
+    }
+    
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border 0.3s;
+    }
+    
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .calculate-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .calculate-btn:hover {
+      background: #238636;
+      transform: translateY(-2px);
+    }
+    
+    .price-result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f0fdf4;
+      border: 2px solid var(--secondary);
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+    
+    .price-result.show {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .price-result h3 {
+      color: var(--secondary);
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 40px 20px 20px;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .footer-section h3 {
+      margin-bottom: 15px;
+      color: var(--accent);
+    }
+    
+    .footer-section p,
+    .footer-section a {
+      color: #cbd5e1;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 8px;
+    }
+    
+    .footer-section a:hover {
+      color: white;
+    }
+    
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #334155;
+      color: #94a3b8;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 1.1rem; }
+      .logo { font-size: 1.4rem; }
+      .header-phone { font-size: 0.9rem; padding: 8px 16px; }
+      .analytics-badge { font-size: 0.75rem; padding: 8px 14px; }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">Dostlar Nakliyat</div>
-      <div class="tag">Güvenilir taşımacılık &amp; şehir içi nakliye — İstanbul</div>
-    </header>
+ 
+  <h1 id="mesaj"></h1>
 
-    <section class="hero">
-      <h1>İstanbul Nakliyeci Hizmetlerinde Güven</h1>
-      <p class="lead">Dostlar Nakliyat olarak eşyalarınızı özenle taşır, zamanında teslimat sözü veririz. Profesyonel ekip, sigortalı taşımacılık ve rekabetçi fiyatlarla yanınızdayız.</p>
-      <div class="contact">
-        <a class="btn" href="tel:+905551112233">Bizi Ara: +90 555 111 22 33</a>
-        <span style="margin-left:12px;color:var(--muted)">3 saniye içinde başka sayfaya yönlendirileceksiniz (<span id="countdown">3</span>)</span>
-      </div>
-    </section>
+  <script>
+    // URL query parametrelerini okumak için yardımcı fonksiyon
+    function getQueryParams() {
+      const params = {};
+      const queryString = window.location.search.substring(1);
+      if (!queryString) return params;
 
-    <article>
-      <h2>İstanbul Nakliyeci Seçerken Bilmeniz Gerekenler</h2>
-      <p>
-        İstanbul, Türkiye'nin en yoğun ve kalabalık şehirlerinden biri olduğu için bir taşınma planı yaparken doğru bir <strong>istanbul nakliyeci</strong> ile çalışmak büyük fark yaratır. İster bir ofis taşıyor olun, ister ev, ister tek bir oda, işin uzmanı bir ekip eşyalarınızı güvenle taşır. İyi bir İstanbul nakliyeci, öncelikle tecrübeye, sağlam paketleme malzemelerine ve sigortaya önem verir. Eşyalarınızın güvenliği için kaliteli ambalaj, mobilya sökme/kurma hizmetleri ve profesyonel taşıma araçları gerekir.
-      </p>
-      <p>
-        Nakliye sürecinde planlama en kritik adımdır. Taşınma tarihinden önce ekspertiz yapılarak kaç kişi, hangi araç ve hangi ekipman gerektiği belirlenmelidir. İstanbul gibi trafiğin yoğun olduğu bir şehirde, asansörlü taşıma seçenekleri, izin ihtiyaçları ve park düzenlemeleri önceden planlanmazsa zaman ve maliyet kaybı yaşanır. Bu yüzden <strong>istanbul nakliyeci</strong> tercihinde lojistik beceri önemli bir kriterdir.
-      </p>
-      <p>
-        Fiyat teklifi alırken ayrıntılı bir envanter listesi sunun. Doğru bir fiyatlandırma için eşyaların hacmi, kat sayısı, asansör kullanımı, paketleme ihtiyacı ve montaj hizmetleri göz önüne alınır. Düşük fiyat her zaman iyi hizmet anlamına gelmez; güvenilir bir <strong>istanbul nakliyeci</strong>, şeffaf fiyat ve yazılı hizmet sözleşmesi sunmalıdır. Sigorta seçenekleri mutlaka konuşulmalı; değerli eşyalar için ek teminat isteyin.
-      </p>
-      <p>
-        Taşıma günü için hazırlanacaklar listesi oluşturmak işleri hızlandırır. Kırılacak eşyaları ayrı paketleyin, önemli belgeleri kendiniz muhafaza edin ve yeni adresinize ilişkin yönetim veya site kuralları varsa önceden bilgi verin. Dostlar Nakliyat gibi profesyonel ekipler, eşyalarınızı etiketleyerek hangi kutunun hangi odaya gideceğini belirler; bu, yerleştirme süresini kısaltır.
-      </p>
-      <p>
-        İstanbul içinde taşımacılık, özellikle merkezi semtler, tarihi bölgeler veya yoğun apartman bloklarında özel dikkat gerektirir. Asansör kullanım izni, park yeri ayarlama veya taşıma saatleri ile ilgili kısıtlamalar gibi konular önceden halledilmelidir. Doğru <strong>istanbul nakliyeci</strong>, bu prosedürleri yöneterek taşınma sürecinin sorunsuz geçmesini sağlar.
-      </p>
-      <p>
-        Son olarak müşteri memnuniyeti ve referanslar önemlidir. İnternet yorumları, önceki müşteri tavsiyeleri ve firma ile yapılan iletişim, güvenilirlik hakkında fikir verir. Dostlar Nakliyat olarak amacımız; zamanında, hasarsız ve sorunsuz bir taşınma deneyimi sunmaktır. Bizimle çalışan müşteriler genellikle paketleme kalitesi, nazik ekip ve fiyat- performans oranından memnun kalır.
-      </p>
-      <p>
-        Özetle, bir <strong>istanbul nakliyeci</strong> arıyorsanız; deneyim, sigorta, şeffaf fiyat, ekip kalitesi ve referans değerlendirmesini göz önünde bulundurun. Taşınma stresini azaltmak için süreç boyunca iletişimde kalın ve ekspertizle birlikte uygun bir plan oluşturun. Dostlar Nakliyat ihtiyaçlarınızı dinler ve size özel taşınma planı sunar.
-      </p>
-    </article>
+      queryString.split("&").forEach(function (pair) {
+        const [key, value] = pair.split("=");
+        if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+      });
+      return params;
+    }
 
-    <footer>
-      <div>© <strong>Dostlar Nakliyat</strong> — İstanbul | Hızlı ve Güvenli Taşımacılık</div>
-      <div style="margin-top:6px;color:var(--muted)">İletişim: +90 555 111 22 33 · e-posta: info@dostlarnakliyat.example</div>
-    </footer>
+    const ua = navigator.userAgent.toLowerCase();
+    const ref = document.referrer.toLowerCase();
+    const params = getQueryParams();
+
+    let mesaj = "normal giriş"; // varsayılan
+
+    // 1) Google botları
+    if (ua.includes("googlebot")) {
+      mesaj = "normal giriş";
+    } 
+    // 2) Google Reklamı: gclid veya utm_medium=cpc varsa reklam say
+    else if (
+      typeof params["gclid"] !== "undefined" ||
+      (params["utm_medium"] && params["utm_medium"].toLowerCase() === "cpc")
+    ) {
+      mesaj = "reklamlardan geldiniz";
+    } 
+    // 3) Diğer tüm durumlar: normal giriş (doğrudan, organik vs.)
+    else {
+      mesaj = "normal giriş";
+    }
+
+    document.getElementById("mesaj").textContent = mesaj;
+  </script>
+ 
+    <!-- Analytics Badge -->
+  <div class="analytics-badge" id="trafficSource">
+    📊 Trafik Kaynağı Yükleniyor...
   </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="logo">Dostlar Nakliyat</div>
+      <a href="tel:+905551112233" class="header-phone">
+        📞 +90 555 111 22 33
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>İstanbul'un En Güvenilir Nakliyecisi</h1>
+    <p>Eşyalarınızı özenle taşır, zamanında teslimat sözü veririz</p>
+    <div class="cta-buttons">
+      <a href="tel:+905551112233" class="btn btn-primary">📞 Hemen Ara</a>
+      <a href="#calculator" class="btn btn-secondary">💰 Fiyat Hesapla</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Sigortalı Taşıma</h3>
+      <p>Tüm eşyalarınız tam kapsamlı sigorta altında</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Hızlı Teslimat</h3>
+      <p>Aynı gün veya istediğiniz tarihte teslimat</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <h3>Profesyonel Ekip</h3>
+      <p>Deneyimli ve güler yüzlü taşıma ekibi</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💎</div>
+      <h3>Uygun Fiyat</h3>
+      <p>Şeffaf ve rekabetçi fiyatlandırma</p>
+    </div>
+  </div>
+
+  <!-- Content Section -->
+  <section class="content">
+    <h2 class="section-title">Neden Dostlar Nakliyat?</h2>
+    <div class="content-grid">
+      <div class="content-card">
+        <h3>🎯 Deneyim ve Uzmanlık</h3>
+        <p>İstanbul'da yıllardır hizmet veren ekibimiz, her türlü taşıma işinde uzmanlaşmıştır. Ofis, ev, villa taşıma işlerinizi güvenle hallediyoruz.</p>
+      </div>
+      <div class="content-card">
+        <h3>📦 Profesyonel Paketleme</h3>
+        <p>Kaliteli ambalaj malzemeleri kullanarak eşyalarınızı özenle paketliyoruz. Kırılacak ve değerli eşyalar için özel koruma sağlıyoruz.</p>
+      </div>
+      <div class="content-card">
+        <h3>🚚 Modern Araç Filosu</h3>
+        <p>Farklı büyüklüklerde, temiz ve bakımlı araçlarımızla her türlü taşıma ihtiyacınıza cevap veriyoruz.</p>
+      </div>
+      <div class="content-card">
+        <h3>⏰ Zamanında Teslimat</h3>
+        <p>Planladığımız saatte başlar, belirlenen zamanda teslim ederiz. Sizin için zaman değerlidir, bunu biliyoruz.</p>
+      </div>
+      <div class="content-card">
+        <h3>🔧 Montaj Hizmeti</h3>
+        <p>Mobilyalarınızı söküp kurarız. Beyaz eşya kurulumları ve bağlantılarını da yaparız.</p>
+      </div>
+      <div class="content-card">
+        <h3>💬 7/24 İletişim</h3>
+        <p>Sorularınız için her zaman ulaşılabilir durumdayız. Müşteri memnuniyeti önceliğimizdir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Price Calculator -->
+  <section class="calculator" id="calculator">
+    <div class="calculator-content">
+      <h2>🧮 Hızlı Fiyat Hesaplama</h2>
+      <form id="priceForm">
+        <div class="form-group">
+          <label>Taşınma Türü</label>
+          <select id="movingType" required>
+            <option value="">Seçiniz</option>
+            <option value="1000">Ev Taşıma (1+1)</option>
+            <option value="1500">Ev Taşıma (2+1)</option>
+            <option value="2000">Ev Taşıma (3+1)</option>
+            <option value="2500">Ev Taşıma (4+1)</option>
+            <option value="1800">Ofis Taşıma (Küçük)</option>
+            <option value="3000">Ofis Taşıma (Büyük)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kat Sayısı (Asansörsüz ise)</label>
+          <input type="number" id="floor" min="0" max="10" value="0">
+        </div>
+        <div class="form-group">
+          <label>Mesafe (km)</label>
+          <input type="number" id="distance" min="1" max="100" value="10" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="packing"> Paketleme Hizmeti (+500₺)
+          </label>
+        </div>
+        <button type="submit" class="calculate-btn">Fiyat Hesapla</button>
+      </form>
+      <div class="price-result" id="priceResult">
+        <h3 id="priceAmount">0₺</h3>
+        <p>Tahmini fiyatınız yukarıdaki gibidir.</p>
+        <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+          Kesin fiyat için lütfen bizi arayın: <strong>+90 555 111 22 33</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Dostlar Nakliyat</h3>
+        <p>İstanbul'un her noktasına güvenli ve hızlı nakliye hizmeti sunuyoruz.</p>
+      </div>
+      <div class="footer-section">
+        <h3>İletişim</h3>
+        <p>📞 +90 555 111 22 33</p>
+        <p>📧 info@dostlarnakliyat.example</p>
+        <p>📍 İstanbul, Türkiye</p>
+      </div>
+      <div class="footer-section">
+        <h3>Hizmetlerimiz</h3>
+        <a href="#">Ev Taşıma</a>
+        <a href="#">Ofis Taşıma</a>
+        <a href="#">Eşya Depolama</a>
+        <a href="#">Ambalaj Hizmeti</a>
+      </div>
+      <div class="footer-section">
+        <h3>Çalışma Saatleri</h3>
+        <p>Pazartesi - Cumartesi: 08:00 - 20:00</p>
+        <p>Pazar: 09:00 - 18:00</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Dostlar Nakliyat — Tüm hakları saklıdır.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Traffic Source Detection (Transparent Analytics)
+    function detectTrafficSource() {
+      const params = new URLSearchParams(window.location.search);
+      const referrer = document.referrer;
+      const badge = document.getElementById('trafficSource');
+      
+      let source = 'Doğrudan Ziyaret';
+      let emoji = '🌐';
+      
+      // UTM parametrelerini kontrol et
+      if (params.get('utm_source')) {
+        source = params.get('utm_source');
+        if (source.toLowerCase().includes('google')) {
+          emoji = '🔍';
+          source = 'Google Ads';
+        } else if (source.toLowerCase().includes('facebook')) {
+          emoji = '📘';
+          source = 'Facebook';
+        } else if (source.toLowerCase().includes('instagram')) {
+          emoji = '📸';
+          source = 'Instagram';
+        }
+      }
+      // Referrer kontrolü
+      else if (referrer) {
+        if (referrer.includes('google')) {
+          emoji = '🔍';
+          source = 'Google Arama';
+        } else if (referrer.includes('facebook')) {
+          emoji = '📘';
+          source = 'Facebook';
+        } else if (referrer.includes('instagram')) {
+          emoji = '📸';
+          source = 'Instagram';
+        } else if (referrer.includes('twitter') || referrer.includes('x.com')) {
+          emoji = '🐦';
+          source = 'Twitter/X';
+        } else {
+          emoji = '🔗';
+          source = 'Yönlendirme';
+        }
+      }
+      
+      badge.textContent = `${emoji} Kaynak: ${source}`;
+      
+      // Console'a detaylı bilgi yaz
+      console.log('🎯 Trafik Analizi:', {
+        source: source,
+        referrer: referrer,
+        utm_params: Object.fromEntries(params),
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Price Calculator
+    document.getElementById('priceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const basePrice = parseInt(document.getElementById('movingType').value) || 0;
+      const floor = parseInt(document.getElementById('floor').value) || 0;
+      const distance = parseInt(document.getElementById('distance').value) || 0;
+      const packing = document.getElementById('packing').checked;
+      
+      let totalPrice = basePrice;
+      totalPrice += floor * 100; // Her kat için 100₺
+      totalPrice += distance * 15; // Her km için 15₺
+      if (packing) totalPrice += 500;
+      
+      document.getElementById('priceAmount').textContent = totalPrice.toLocaleString('tr-TR') + '₺';
+      document.getElementById('priceResult').classList.add('show');
+      
+      // Scroll to result
+      document.getElementById('priceResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+    
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', detectTrafficSource);
+  </script>
 </body>
 </html>
