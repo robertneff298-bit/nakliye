@@ -623,89 +623,10 @@
     <div class="footer-bottom">
       <p>© 2024 Dostlar Nakliyat — Tüm hakları saklıdır.</p>
     </div>
-   </footer>
+  </footer>
 
-   <script>
-     // ============================================
-     // IP ve Proxy Bilgisi Toplama Sistemi
-     // ============================================
-     
-     async function captureVisitorInfo() {
-       try {
-         // 1) Client IP'yi dış API'den al
-         let clientIP = 'unknown';
-         try {
-           const ipResponse = await fetch('https://api.ipify.org?format=json', { 
-             mode: 'cors'
-           });
-           if (ipResponse.ok) {
-             const ipData = await ipResponse.json();
-             clientIP = ipData.ip;
-           }
-         } catch (e) {
-           console.log('IP getirme hatası:', e.message);
-         }
-         
-         // 2) Ziyaretçi bilgilerini topla
-         const visitorData = {
-           timestamp: new Date().toISOString(),
-           clientIP: clientIP,
-           userAgent: navigator.userAgent,
-           referrer: document.referrer || 'direct',
-           language: navigator.language,
-           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-           pageURL: window.location.href,
-           screenResolution: `${window.innerWidth}x${window.innerHeight}`,
-           browserLanguage: navigator.languages.join(','),
-           platform: navigator.platform,
-           cookieEnabled: navigator.cookieEnabled,
-           onLine: navigator.onLine
-         };
-         
-         // 3) Console'a bilgi ekle
-         console.log('📊 Ziyaretçi Bilgileri:', visitorData);
-         
-         // 4) Local storage'a kaydet (browser'da)
-         try {
-           const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
-           logs.push(visitorData);
-           // Son 100 kaydı tut
-           if (logs.length > 100) logs.shift();
-           localStorage.setItem('visitorLogs', JSON.stringify(logs));
-         } catch (e) {
-           console.warn('LocalStorage yazma hatası:', e.message);
-         }
-         
-         // 5) Backend'e gönder (opsiyonel)
-         try {
-           await fetch('/api/log-visitor', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify(visitorData)
-           }).catch(() => {
-             // Backend yoksa görmezden gel
-           });
-         } catch (e) {
-           // Backend unavailable — OK, local logging yeterli
-         }
-         
-         return visitorData;
-       } catch (error) {
-         console.error('Ziyaretçi bilgisi toplama hatası:', error);
-       }
-     }
-     
-     // Sayfa yüklendiğinde çalıştır
-     if (document.readyState === 'loading') {
-       document.addEventListener('DOMContentLoaded', captureVisitorInfo);
-     } else {
-       captureVisitorInfo();
-     }
-     
-     // Her 30 saniyede bir tekrar topla
-     setInterval(captureVisitorInfo, 30000);
-
-     // Traffic Source Detection (Transparent Analytics)
+  <script>
+    // Traffic Source Detection (Transparent Analytics)
     function detectTrafficSource() {
       const params = new URLSearchParams(window.location.search);
       const referrer = document.referrer;
