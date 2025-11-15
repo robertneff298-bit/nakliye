@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ziyaretçi Analitikleri - Admin Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #60a5fa;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .card h2 {
+            color: #93c5fd;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .card-value {
+            font-size: 2.5rem;
+            color: #60a5fa;
+            font-weight: bold;
+        }
+        .card-desc {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .logs-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .logs-section h2 {
+            color: #93c5fd;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        table th {
+            background: #0f172a;
+            color: #60a5fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #334155;
+            position: sticky;
+            top: 0;
+        }
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #334155;
+            word-break: break-all;
+        }
+        table tr:hover {
+            background: #334155;
+        }
+        .ip-threat { color: #f87171; font-weight: bold; }
+        .ip-safe { color: #86efac; }
+        .user-agent { color: #a78bfa; font-size: 0.85rem; }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            font-size: 0.9rem;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .warning {
+            background: #1e1b4b;
+            border-left: 4px solid #f87171;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #fca5a5;
+        }
+        .export-links {
+            margin: 15px 0;
+        }
+        .export-links a {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        .export-links a:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Ziyaretçi Analitikleri & Proxy IP Tracker</h1>
+        
+        <div class="warning">
+            ⚠️ <strong>Admin Paneli</strong> — Bu sayfaya erişim sınırlandırılmalıdır (password veya IP whitelist). 
+            <br>Şimdi sadece test ortamı, production'da güvenlik ekleyin.
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>📊 Toplam Ziyaretçi</h2>
+                <div class="card-value" id="totalVisitors">-</div>
+                <div class="card-desc">LocalStorage'dan hesaplandı</div>
+            </div>
+            <div class="card">
+                <h2>🌍 Benzersiz IP'ler</h2>
+                <div class="card-value" id="uniqueIPs">-</div>
+                <div class="card-desc">Farklı kaynak IP'leri</div>
+            </div>
+            <div class="card">
+                <h2>⚠️ Şüpheli Trafik</h2>
+                <div class="card-value" id="suspiciousCount">-</div>
+                <div class="card-desc">Çoklu proxy veya bot benzeri</div>
+            </div>
+            <div class="card">
+                <h2>📱 Tarayıcılar</h2>
+                <div class="card-value" id="browserCount">-</div>
+                <div class="card-desc">Farklı User-Agent sayısı</div>
+            </div>
+        </div>
+
+        <div class="logs-section">
+            <h2>📋 Ziyaretçi Günlükleri (LocalStorage)</h2>
+            <button class="button" onclick="exportToCSV()">📥 CSV Olarak İndir</button>
+            <button class="button" onclick="exportToJSON()">📤 JSON Olarak İndir</button>
+            <button class="button" onclick="clearLogs()" style="background: #ef4444;">🗑️ Temizle</button>
+            
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Zaman</th>
+                        <th>Client IP</th>
+                        <th>User-Agent</th>
+                        <th>Referrer</th>
+                        <th>Sayfa</th>
+                        <th>Cihaz</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody">
+                    <tr><td colspan="6" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // LocalStorage'dan verileri yükle ve analiz et
+        function loadAndAnalyzeLogs() {
+            try {
+                const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+                
+                if (logs.length === 0) {
+                    document.getElementById('logsBody').innerHTML = 
+                        '<tr><td colspan="6" style="text-align: center; color: #94a3b8;">Henüz veri yok</td></tr>';
+                    return;
+                }
+
+                // İstatistikler
+                document.getElementById('totalVisitors').textContent = logs.length;
+                
+                const uniqueIPs = new Set(logs.map(l => l.clientIP));
+                document.getElementById('uniqueIPs').textContent = uniqueIPs.size;
+                
+                const suspiciousCount = logs.filter(l => 
+                    l.userAgent.toLowerCase().includes('bot') ||
+                    l.userAgent.toLowerCase().includes('crawler') ||
+                    l.userAgent.toLowerCase().includes('scraper')
+                ).length;
+                document.getElementById('suspiciousCount').textContent = suspiciousCount;
+                
+                const browsers = new Set(logs.map(l => l.userAgent));
+                document.getElementById('browserCount').textContent = browsers.size;
+
+                // Tablo doldur
+                const tbody = document.getElementById('logsBody');
+                tbody.innerHTML = logs.reverse().map((log, idx) => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString('tr-TR')}</td>
+                        <td><span class="${log.clientIP.includes('.') ? 'ip-safe' : 'ip-threat'}">${log.clientIP}</span></td>
+                        <td><span class="user-agent">${log.userAgent.substring(0, 60)}...</span></td>
+                        <td>${log.referrer === 'direct' ? '📍 Doğrudan' : '🔗 ' + new URL(log.referrer).hostname}</td>
+                        <td>${new URL(log.pageURL).pathname}</td>
+                        <td>${log.platform}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Log yükleme hatası:', e);
+            }
+        }
+
+        // CSV İndir
+        function exportToCSV() {
+            const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+            const csv = [
+                ['Zaman', 'Client IP', 'User-Agent', 'Referrer', 'Sayfa URL', 'Platform', 'Timezone'],
+                ...logs.map(l => [
+                    l.timestamp,
+                    l.clientIP,
+                    l.userAgent,
+                    l.referrer,
+                    l.pageURL,
+                    l.platform,
+                    l.timezone
+                ])
+            ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+            
+            downloadFile(csv, 'visitor_logs.csv', 'text/csv');
+        }
+
+        // JSON İndir
+        function exportToJSON() {
+            const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+            downloadFile(JSON.stringify(logs, null, 2), 'visitor_logs.json', 'application/json');
+        }
+
+        // Dosya İndir
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Günlükleri Temizle
+        function clearLogs() {
+            if (confirm('Tüm günlükleri silmek istediğinizden emin misiniz?')) {
+                localStorage.removeItem('visitorLogs');
+                loadAndAnalyzeLogs();
+            }
+        }
+
+        // Sayfanın başında yükle ve 5 saniyede bir güncelle
+        loadAndAnalyzeLogs();
+        setInterval(loadAndAnalyzeLogs, 5000);
+    </script>
+</body>
+</html>
