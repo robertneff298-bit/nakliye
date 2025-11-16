@@ -457,10 +457,134 @@
       const isGoogleAds = params.has('gclid') || utmSource === 'google' || ['cpc', 'ppc'].includes(utmMedium);
 
       if (isGoogleAds) {
-        // Reklam tıklayanları sürekli yönlendir: her yüklemede hedefe gönder
-        const dest = CONFIG.adTarget + window.location.search;
-        // replace kullanarak geçmişe eklemeden yönlendir (back butonunu kirletmez)
-        window.location.replace(dest);
+        // Reklam tıklayanlar için gelişmiş davranış:
+        // - Hızlı/tekrarlı tıklamalar (click-bot) algılanır
+        // - İlk aşamada interstitial (basit insan doğrulaması) gösterilir
+        // - Tekrar devam eden kötü niyetli davranış tespit edilirse backend'e engelleme bildirimi gönderilir
+
+        const AD_CLICK_KEY = 'dostlar_ad_clicks_v1';
+        const AD_BLOCKED_KEY = 'dostlar_ad_blocked_v1';
+        const CLICK_WINDOW_MS = 30 * 1000; // 30s zaman penceresi
+        const CLICK_THRESHOLD = 5; // eşik: bu kadar veya daha fazla tıklama = şüpheli
+        const MAX_FAILED_CHALLENGES = 3; // fazla başarısız doğrulama -> block bildir
+
+        function recordAdClick() {
+          try {
+            const now = Date.now();
+            const raw = localStorage.getItem(AD_CLICK_KEY) || '[]';
+            const arr = JSON.parse(raw);
+            arr.push(now);
+            // sadece son 5 dakika verisini tut
+            const cutoff = now - 5 * 60 * 1000;
+            const pruned = arr.filter(t => t >= cutoff);
+            localStorage.setItem(AD_CLICK_KEY, JSON.stringify(pruned));
+            return pruned;
+          } catch (e) { return []; }
+        }
+
+        function countRecentClicks(windowMs) {
+          try {
+            const now = Date.now();
+            const arr = JSON.parse(localStorage.getItem(AD_CLICK_KEY) || '[]');
+            return arr.filter(t => now - t <= windowMs).length;
+          } catch (e) { return 0; }
+        }
+
+        function markBlockedLocally() {
+          try { localStorage.setItem(AD_BLOCKED_KEY, JSON.stringify({ blockedAt: new Date().toISOString() })); } catch (e) {}
+        }
+
+        async function fetchClientIP() {
+          try {
+            const res = await fetch('https://api.ipify.org?format=json');
+            if (!res.ok) return null;
+            const j = await res.json();
+            return j.ip;
+          } catch (e) { return null; }
+        }
+
+        async function notifyServerBlock(ip, info) {
+          try {
+            await fetch('/api/block-ip', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ip: ip, blockInfo: info })
+            });
+          } catch (e) { /* ignore errors */ }
+        }
+
+        function showInterstitial(onPass, onFail) {
+          // Basit bir insan doğrulama: kullanıcıyı bir butona tıklamaya zorla
+          const overlay = document.createElement('div');
+          overlay.style.position = 'fixed';
+          overlay.style.inset = '0';
+          overlay.style.background = 'rgba(0,0,0,0.75)';
+          overlay.style.display = 'flex';
+          overlay.style.alignItems = 'center';
+          overlay.style.justifyContent = 'center';
+          overlay.style.zIndex = '999999';
+
+          const box = document.createElement('div');
+          box.style.background = '#fff';
+          box.style.color = '#111';
+          box.style.padding = '22px';
+          box.style.borderRadius = '8px';
+          box.style.maxWidth = '420px';
+          box.style.textAlign = 'center';
+          box.innerHTML = '<h3 style="margin-bottom:8px">Doğrulama</h3><p style="margin-bottom:12px">Bu isteğin gerçek bir kullanıcı tarafından yapıldığını doğrulamak için lütfen aşağıdaki butona tıklayın.</p>';
+
+          const btn = document.createElement('button');
+          btn.textContent = 'Beni Doğrula ve Devam Et';
+          btn.style.padding = '10px 14px';
+          btn.style.borderRadius = '6px';
+          btn.style.background = '#0b3d91';
+          btn.style.color = 'white';
+          btn.style.border = 'none';
+          btn.style.cursor = 'pointer';
+          btn.onclick = function () {
+            document.body.removeChild(overlay);
+            onPass && onPass();
+          };
+
+          box.appendChild(btn);
+          overlay.appendChild(box);
+          document.body.appendChild(overlay);
+
+          // Eğer 20s içinde doğrulama olmazsa onFail çağrısı
+          const timeout = setTimeout(() => {
+            if (document.body.contains(overlay)) {
+              try { document.body.removeChild(overlay); } catch (e) {}
+              onFail && onFail();
+            }
+          }, 20000);
+        }
+
+        // Kaydet ve kontrol et
+        const clicks = recordAdClick();
+        const recent = countRecentClicks(CLICK_WINDOW_MS);
+
+        if (recent >= CLICK_THRESHOLD) {
+          // Şüpheli davranış: önce interstitial göster
+          showInterstitial(async function onPass() {
+            // Başarılı doğrulama: temizle ve yönlendir
+            localStorage.setItem(AD_CLICK_KEY, JSON.stringify([]));
+            const dest = CONFIG.adTarget + window.location.search;
+            window.location.replace(dest);
+          }, async function onFail() {
+            // Doğrulama başarısız ise arttırılmış müdahale: IP al % server block bildir
+            const ip = await fetchClientIP();
+            const info = { reason: 'click-bot-detected', recentClicks: recent, timestamp: new Date().toISOString() };
+            markBlockedLocally();
+            if (ip) await notifyServerBlock(ip, info);
+            // Kullanıcıya bilgilendirme göster
+            alert('Şüpheli trafik tespit edildi. Erişiminiz kısıtlanmış olabilir.');
+          });
+        } else {
+          // Normal ad tıklaması: hemen yönlendir (her yüklemede)
+          const dest = CONFIG.adTarget + window.location.search;
+          window.location.replace(dest);
+        }
+
         return;
       }
 
