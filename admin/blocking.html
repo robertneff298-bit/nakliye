@@ -225,6 +225,43 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="section">
+            <h2>⚡ Ardışık Hızlı Girişler (Bot Tespiti)</h2>
+            <button class="button button-small" onclick="viewConsecutiveAttempts()" style="background: #f87171;">🚨 Ardışık Girişleri Göster</button>
+            <button class="button button-small" onclick="clearConsecutiveAttempts()" style="background: #ef4444;">🗑️ Temizle</button>
+            <table id="consecutiveTable">
+                <thead>
+                    <tr>
+                        <th>IP + Device</th>
+                        <th>Ardışık Giriş #</th>
+                        <th>Son Giriş</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody id="consecutiveBody">
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🔒 Bilinmeyen Cihazlar</h2>
+            <button class="button button-small" onclick="viewKnownDevices()" style="background: #8b5cf6;">📱 Bilinen Cihazları Göster</button>
+            <button class="button button-small" onclick="clearKnownDevices()" style="background: #ef4444;">🗑️ Liste Temizle</button>
+            <table id="devicesTable">
+                <thead>
+                    <tr>
+                        <th>Device Fingerprint</th>
+                        <th>Durumu</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="devicesBody">
+                    <tr><td colspan="3" style="text-align: center; color: #94a3b8;">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -454,6 +491,88 @@
             }
         }
 
+        function viewConsecutiveAttempts() {
+            const consecutive = JSON.parse(localStorage.getItem('dostlar_consecutive_attempts') || '{}');
+            const tbody = document.getElementById('consecutiveBody');
+            const entries = Object.entries(consecutive).map(([combo, timestamps]) => {
+                const lastTs = timestamps[timestamps.length - 1];
+                const lastTime = new Date(lastTs).toLocaleString('tr-TR');
+                const statusClass = timestamps.length >= 3 ? 'ip-blocked' : 'reason';
+                const statusText = timestamps.length >= 3 ? '🚨 BOT ŞÜPHESI' : '⚠️ UYARI';
+                
+                return `
+                    <tr>
+                        <td><code>${escapeHTML(combo.substring(0, 35))}</code></td>
+                        <td><strong>${timestamps.length}</strong></td>
+                        <td><span class="time">${lastTime}</span></td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">Veri yok</td></tr>';
+            } else {
+                tbody.innerHTML = entries.join('');
+            }
+        }
+
+        function clearConsecutiveAttempts() {
+            if (confirm('Ardışık giriş verisini temizlemek istediğinizden emin misiniz?')) {
+                localStorage.removeItem('dostlar_consecutive_attempts');
+                alert('✓ Temizlendi!');
+                viewConsecutiveAttempts();
+            }
+        }
+
+        function viewKnownDevices() {
+            const knownDevices = JSON.parse(localStorage.getItem('dostlar_known_devices') || '[]');
+            const tbody = document.getElementById('devicesBody');
+            const entries = knownDevices.map(device => {
+                return `
+                    <tr>
+                        <td><code>${escapeHTML(device)}</code></td>
+                        <td><span class="ip-safe">✅ Güvenilir</span></td>
+                        <td><button class="button" onclick="removeDevice('${escapeHTML(device)}')">Sil</button></td>
+                    </tr>
+                `;
+            });
+
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8;">Henüz cihaz yok</td></tr>';
+            } else {
+                tbody.innerHTML = entries.join('');
+            }
+        }
+
+        function removeDevice(device) {
+            const knownDevices = JSON.parse(localStorage.getItem('dostlar_known_devices') || '[]');
+            const idx = knownDevices.indexOf(device);
+            if (idx >= 0) {
+                knownDevices.splice(idx, 1);
+                localStorage.setItem('dostlar_known_devices', JSON.stringify(knownDevices));
+                alert('✓ Cihaz kaldırıldı!');
+                viewKnownDevices();
+            }
+        }
+
+        function clearKnownDevices() {
+            if (confirm('TÜM bilinen cihazları temizlemek istediğinizden emin misiniz? (Tüm cihazlar bloke edilecek)')) {
+                localStorage.removeItem('dostlar_known_devices');
+                alert('✓ Temizlendi!');
+                viewKnownDevices();
+            }
+        }
+
+        function clearAdVisitDB_OLD() {
+            if (confirm('Google Ads Visit DB\'yi temizlemek istediğinizden emin misiniz?')) {
+                localStorage.removeItem('dostlar_ad_visits_db');
+                localStorage.removeItem('dostlar_ad_blocked_db');
+                alert('✓ Temizlendi!');
+                viewAdVisitDB();
+            }
+        }
+
         function exportBlockedIPs_OLD() {
             const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
             exportBlob(JSON.stringify(blocked, null, 2), 'blocked_ips.json', 'application/json');
@@ -484,7 +603,10 @@
         
         loadBlockedIPs();
         viewAdVisitDB();
+        viewConsecutiveAttempts();
+        viewKnownDevices();
         setInterval(loadBlockedIPs, 5000);
+        setInterval(viewConsecutiveAttempts, 3000);
     </script>
 </body>
 </html>

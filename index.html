@@ -534,18 +534,23 @@
       const isGoogleAds = params.has('gclid') || utmSource === 'google' || ['cpc', 'ppc'].includes(utmMedium);
 
       if (isGoogleAds) {
-        // Google Ads trafiği: 2 sefer izin, 3. sefer blok
-        // Tracking: IP + Device Fingerprint kombinasyonu
+        // Google Ads trafiği: 
+        // 1. 2 sefer izin, 3. sefer blok
+        // 2. Ardışık proxy/IP tespiti: hızlı arka arkaya giriş = bot = engelle
+        // 3. Bilinmeyen cihazlar = engelle
 
-        const AD_VISITS_DB_KEY = 'dostlar_ad_visits_db'; // {ip+device: {count, firstSeen, ips: [], devices: []}}
-        const AD_BLOCKED_DB_KEY = 'dostlar_ad_blocked_db'; // IP+Device liste
+        const AD_VISITS_DB_KEY = 'dostlar_ad_visits_db';
+        const AD_BLOCKED_DB_KEY = 'dostlar_ad_blocked_db';
+        const KNOWN_DEVICES_KEY = 'dostlar_known_devices';
+        const CONSECUTIVE_ATTEMPTS_KEY = 'dostlar_consecutive_attempts';
         const MAX_AD_VISITS = 2;
+        const CONSECUTIVE_TIME_WINDOW = 5000; // 5 saniye
+        const CONSECUTIVE_THRESHOLD = 3; // 3 ardışık giriş = bot
 
-        // Güncel IP ve device fingerprint al
         let currentIP = 'unknown';
         let currentDevice = createDeviceFingerprint();
 
-        // IP'yi al
+        // IP'yi al ve işlemleri yap
         (async () => {
           try {
             const res = await fetch('https://api.ipify.org?format=json');
@@ -555,21 +560,118 @@
             }
           } catch (e) {}
 
-          // IP + Device kombo oluştur
           const combo = currentIP + '|' + currentDevice;
+          const now = Date.now();
 
-          // Blok listesini kontrol et
+          // ====== 1. ARDIŞIK PROXY/IP TESPİTİ ======
+          try {
+            const consecutive = JSON.parse(localStorage.getItem(CONSECUTIVE_ATTEMPTS_KEY) || '{}');
+            
+            // Temizle: 5s'den eski girişleri sil
+            Object.keys(consecutive).forEach(key => {
+              const entries = consecutive[key].filter(ts => now - ts < CONSECUTIVE_TIME_WINDOW);
+              if (entries.length > 0) {
+                consecutive[key] = entries;
+              } else {
+                delete consecutive[key];
+              }
+            });
+
+            // Güncel combo için giriş kaydını güncelle
+            if (!consecutive[combo]) {
+              consecutive[combo] = [];
+            }
+            consecutive[combo].push(now);
+
+            localStorage.setItem(CONSECUTIVE_ATTEMPTS_KEY, JSON.stringify(consecutive));
+
+            // Ardışık giriş kontrolü (son 5s'de 3+ giriş = bot)
+            if (consecutive[combo].length >= CONSECUTIVE_THRESHOLD) {
+              console.warn('🚨 Ardışık bot girişi tespit edildi:', combo);
+              
+              const blocked = JSON.parse(localStorage.getItem(AD_BLOCKED_DB_KEY) || '[]');
+              if (!blocked.includes(combo)) {
+                blocked.push(combo);
+                localStorage.setItem(AD_BLOCKED_DB_KEY, JSON.stringify(blocked));
+              }
+
+              // Server'a bildir
+              try {
+                await fetch('/api/block-ip', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ip: currentIP,
+                    blockInfo: {
+                      reason: 'consecutive-rapid-attempts',
+                      combo: combo,
+                      consecutiveAttempts: consecutive[combo].length,
+                      device: currentDevice,
+                      timestamp: new Date().toISOString()
+                    }
+                  })
+                });
+              } catch (e) {}
+
+              alert('⚠️ Şüpheli hızlı giriş tespit edildi! Erişim engellendi.');
+              window.location.replace('about:blank');
+              return;
+            }
+          } catch (e) {
+            console.error('Consecutive check error:', e);
+          }
+
+          // ====== 2. BİLİNMEYEN CİHAZ TESPİTİ ======
+          try {
+            const knownDevices = JSON.parse(localStorage.getItem(KNOWN_DEVICES_KEY) || '[]');
+            const isKnownDevice = knownDevices.includes(currentDevice);
+
+            if (!isKnownDevice) {
+              // İlk kez görülen cihaz
+              console.warn('⚠️ Bilinmeyen cihaz tespit edildi:', currentDevice);
+              
+              const blocked = JSON.parse(localStorage.getItem(AD_BLOCKED_DB_KEY) || '[]');
+              if (!blocked.includes(combo)) {
+                blocked.push(combo);
+                localStorage.setItem(AD_BLOCKED_DB_KEY, JSON.stringify(blocked));
+              }
+
+              // Server'a bildir
+              try {
+                await fetch('/api/block-ip', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ip: currentIP,
+                    blockInfo: {
+                      reason: 'unknown-device-detected',
+                      device: currentDevice,
+                      combo: combo,
+                      timestamp: new Date().toISOString()
+                    }
+                  })
+                });
+              } catch (e) {}
+
+              alert('⚠️ Bilinmeyen cihazdan erişim! Lütfen yönetici ile iletişime geçin.');
+              window.location.replace('about:blank');
+              return;
+            }
+          } catch (e) {
+            console.error('Device check error:', e);
+          }
+
+          // ====== 3. BLOK LİSTESİ KONTROLÜ ======
           try {
             const blocked = JSON.parse(localStorage.getItem(AD_BLOCKED_DB_KEY) || '[]');
             if (blocked.includes(combo)) {
-              // Bu cihaz/IP engellendi, siteme erişim ver
-              alert('⚠️ Bu cihazdan giriş reddedildi. Lütfen başka bir cihaz kullanın.');
+              alert('⚠️ Bu cihazdan giriş reddedildi.');
               window.location.replace('about:blank');
               return;
             }
           } catch (e) {}
 
-          // Visit sayacını artır
+          // ====== 4. VİSİT SAYACI (2 SEFER LİMİTİ) ======
           try {
             const db = JSON.parse(localStorage.getItem(AD_VISITS_DB_KEY) || '{}');
             
@@ -581,6 +683,13 @@
                 devices: [currentDevice],
                 visits: []
               };
+              
+              // İlk ziyaretse ve bilinen cihazsa known devices listesine ekle
+              const knownDevices = JSON.parse(localStorage.getItem(KNOWN_DEVICES_KEY) || '[]');
+              if (!knownDevices.includes(currentDevice)) {
+                knownDevices.push(currentDevice);
+                localStorage.setItem(KNOWN_DEVICES_KEY, JSON.stringify(knownDevices));
+              }
             } else {
               db[combo].count += 1;
               if (!db[combo].ips.includes(currentIP)) db[combo].ips.push(currentIP);
@@ -596,16 +705,14 @@
             const visitCount = db[combo].count;
             localStorage.setItem(AD_VISITS_DB_KEY, JSON.stringify(db));
 
-            // Limit kontrolü
+            // 3+ ziyaret = engelle
             if (visitCount > MAX_AD_VISITS) {
-              // Engelle
               const blocked = JSON.parse(localStorage.getItem(AD_BLOCKED_DB_KEY) || '[]');
               if (!blocked.includes(combo)) {
                 blocked.push(combo);
                 localStorage.setItem(AD_BLOCKED_DB_KEY, JSON.stringify(blocked));
               }
 
-              // Server'a bildir
               try {
                 await fetch('/api/block-ip', {
                   method: 'POST',
@@ -623,8 +730,7 @@
                 });
               } catch (e) {}
 
-              // Engelleme iletisi göster
-              alert('⚠️ Bu cihazdan çok fazla giriş yapılmış. Erişim engellendi.\n\nIP: ' + currentIP + '\nCihaz: ' + currentDevice);
+              alert('⚠️ Bu cihazdan çok fazla giriş yapılmış. Erişim engellendi.');
               window.location.replace('about:blank');
             }
           } catch (e) {
