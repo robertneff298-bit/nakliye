@@ -204,6 +204,27 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="section">
+            <h2>🔴 Google Ads Ziyaret Tracker (2 Sefer Limiti)</h2>
+            <button class="button button-small" onclick="viewAdVisitDB()" style="background: #8b5cf6;">📊 Tüm AD Ziyaretleri Göster</button>
+            <button class="button button-small" onclick="clearAdVisitDB()" style="background: #ef4444;">🗑️ AD Visit DB'yi Temizle</button>
+            <table id="adVisitTable">
+                <thead>
+                    <tr>
+                        <th>IP + Device Combo</th>
+                        <th>Ziyaret Sayısı</th>
+                        <th>İlk Ziyaret</th>
+                        <th>Durum</th>
+                        <th>IP'ler</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="adVisitBody">
+                    <tr><td colspan="6" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -382,6 +403,61 @@
             const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
             exportBlob(JSON.stringify(blocked, null, 2), 'blocked_ips.json', 'application/json');
         }
+
+        function viewAdVisitDB() {
+            const db = JSON.parse(localStorage.getItem('dostlar_ad_visits_db') || '{}');
+            const blocked = JSON.parse(localStorage.getItem('dostlar_ad_blocked_db') || '[]');
+
+            const tbody = document.getElementById('adVisitBody');
+            const entries = Object.entries(db).map(([combo, data]) => {
+                const isBlocked = blocked.includes(combo);
+                const statusClass = isBlocked ? 'ip-blocked' : 'reason';
+                const statusText = isBlocked ? '🚫 BLOKLANDı' : (data.count >= 2 ? '⚠️ SON UYARI' : '✅ İZİN');
+                
+                return `
+                    <tr>
+                        <td><code>${escapeHTML(combo.substring(0, 40))}</code></td>
+                        <td><strong>${data.count}</strong></td>
+                        <td><span class="time">${new Date(data.firstSeen).toLocaleString('tr-TR')}</span></td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td><code>${escapeHTML(data.ips.join(', '))}</code></td>
+                        <td><button class="button" onclick="blockAdCombo('${escapeHTML(combo)}')">Engelle</button></td>
+                    </tr>
+                `;
+            });
+
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #94a3b8;">Veri yok</td></tr>';
+            } else {
+                tbody.innerHTML = entries.join('');
+            }
+        }
+
+        function blockAdCombo(combo) {
+            const blocked = JSON.parse(localStorage.getItem('dostlar_ad_blocked_db') || '[]');
+            if (!blocked.includes(combo)) {
+                blocked.push(combo);
+                localStorage.setItem('dostlar_ad_blocked_db', JSON.stringify(blocked));
+                alert('✅ ' + combo.substring(0, 40) + ' engellendi!');
+                viewAdVisitDB();
+            } else {
+                alert('⚠️ Zaten engellendi!');
+            }
+        }
+
+        function clearAdVisitDB() {
+            if (confirm('Google Ads Visit DB\'yi temizlemek istediğinizden emin misiniz?')) {
+                localStorage.removeItem('dostlar_ad_visits_db');
+                localStorage.removeItem('dostlar_ad_blocked_db');
+                alert('✓ Temizlendi!');
+                viewAdVisitDB();
+            }
+        }
+
+        function exportBlockedIPs_OLD() {
+            const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
+            exportBlob(JSON.stringify(blocked, null, 2), 'blocked_ips.json', 'application/json');
+        }
         
         function generateNginxConfig() {
             const blocked = JSON.parse(localStorage.getItem('blockedIPs') || '{}');
@@ -407,6 +483,7 @@
         }
         
         loadBlockedIPs();
+        viewAdVisitDB();
         setInterval(loadBlockedIPs, 5000);
     </script>
 </body>

@@ -166,16 +166,15 @@
                     <tr>
                         <th>Zaman</th>
                         <th>Client IP</th>
-                        <th>X-Forwarded-For</th>
-                        <th>CF-Connecting-IP</th>
-                        <th>X-Real-IP</th>
+                        <th>Device Fingerprint</th>
+                        <th>Screen Res</th>
                         <th>User-Agent</th>
-                        <th>Referrer</th>
-                        <th>Cihaz</th>
+                        <th>X-Forwarded-For</th>
+                        <th>Platform</th>
                     </tr>
                 </thead>
                 <tbody id="logsBody">
-                    <tr><td colspan="8" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -189,7 +188,7 @@
                 
                 if (logs.length === 0) {
                     document.getElementById('logsBody').innerHTML = 
-                        '<tr><td colspan="8" style="text-align: center; color: #94a3b8;">Henüz veri yok</td></tr>';
+                        '<tr><td colspan="7" style="text-align: center; color: #94a3b8;">Henüz veri yok</td></tr>';
                     return;
                 }
 
@@ -229,11 +228,10 @@
                     <tr>
                         <td>${new Date(log.timestamp).toLocaleString('tr-TR')}</td>
                         <td><span class="${threatClass}">${log.clientIP || '-'}</span></td>
+                        <td><span class="ip-threat">${log.deviceFingerprint || '-'}</span></td>
+                        <td>${log.screenResolution || '-'}</td>
+                        <td><span class="user-agent">${(log.userAgent || '').substring(0, 35)}...</span></td>
                         <td><span class="ip-threat">${log.xForwardedFor ? '🚨 ' + log.xForwardedFor : '-'}</span></td>
-                        <td><span class="ip-threat">${log.cfConnectingIP ? '🚨 ' + log.cfConnectingIP : '-'}</span></td>
-                        <td><span class="ip-threat">${log.xRealIP ? '🚨 ' + log.xRealIP : '-'}</span></td>
-                        <td><span class="user-agent">${(log.userAgent || '').substring(0, 40)}...</span></td>
-                        <td>${log.referrer === 'direct' ? '📍 Doğrudan' : log.referrer ? log.referrer.substring(0, 30) : '-'}</td>
                         <td>${log.platform || '-'}</td>
                     </tr>
                 `}).join('');
@@ -248,18 +246,16 @@
         function exportToCSV() {
             const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
             const csv = [
-                ['Zaman', 'Client IP', 'X-Forwarded-For', 'CF-Connecting-IP', 'X-Real-IP', 'Client-IP', 'User-Agent', 'Referrer', 'Platform', 'Timezone'],
+                ['Zaman', 'Client IP', 'Device Fingerprint', 'Screen Res', 'User-Agent', 'Platform', 'Timezone', 'Language'],
                 ...logs.map(l => [
                     l.timestamp,
                     l.clientIP || '',
-                    l.xForwardedFor || '',
-                    l.cfConnectingIP || '',
-                    l.xRealIP || '',
-                    l.clientIP_header || '',
+                    l.deviceFingerprint || '',
+                    l.screenResolution || '',
                     l.userAgent || '',
-                    l.referrer || '',
                     l.platform || '',
-                    l.timezone || ''
+                    l.timezone || '',
+                    l.language || ''
                 ])
             ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
             
