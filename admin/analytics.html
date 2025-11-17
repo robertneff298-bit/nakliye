@@ -156,7 +156,7 @@
         </div>
 
         <div class="logs-section">
-            <h2>📋 Ziyaretçi Günlükleri (LocalStorage)</h2>
+            <h2>📋 Ziyaretçi Günlükleri & Proxy IP'leri (LocalStorage)</h2>
             <button class="button" onclick="exportToCSV()">📥 CSV Olarak İndir</button>
             <button class="button" onclick="exportToJSON()">📤 JSON Olarak İndir</button>
             <button class="button" onclick="clearLogs()" style="background: #ef4444;">🗑️ Temizle</button>
@@ -166,14 +166,16 @@
                     <tr>
                         <th>Zaman</th>
                         <th>Client IP</th>
+                        <th>X-Forwarded-For</th>
+                        <th>CF-Connecting-IP</th>
+                        <th>X-Real-IP</th>
                         <th>User-Agent</th>
                         <th>Referrer</th>
-                        <th>Sayfa</th>
                         <th>Cihaz</th>
                     </tr>
                 </thead>
                 <tbody id="logsBody">
-                    <tr><td colspan="6" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
+                    <tr><td colspan="8" style="text-align: center; color: #94a3b8;">Veri yükleniyor...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -187,21 +189,31 @@
                 
                 if (logs.length === 0) {
                     document.getElementById('logsBody').innerHTML = 
-                        '<tr><td colspan="6" style="text-align: center; color: #94a3b8;">Henüz veri yok</td></tr>';
+                        '<tr><td colspan="8" style="text-align: center; color: #94a3b8;">Henüz veri yok</td></tr>';
                     return;
                 }
 
                 // İstatistikler
                 document.getElementById('totalVisitors').textContent = logs.length;
                 
-                const uniqueIPs = new Set(logs.map(l => l.clientIP));
+                const uniqueIPs = new Set();
+                logs.forEach(l => {
+                    if (l.clientIP) uniqueIPs.add(l.clientIP);
+                    if (l.xForwardedFor) {
+                        l.xForwardedFor.split(',').forEach(ip => uniqueIPs.add(ip.trim()));
+                    }
+                    if (l.cfConnectingIP) uniqueIPs.add(l.cfConnectingIP);
+                    if (l.xRealIP) uniqueIPs.add(l.xRealIP);
+                    if (l.clientIP_header) uniqueIPs.add(l.clientIP_header);
+                });
                 document.getElementById('uniqueIPs').textContent = uniqueIPs.size;
                 
-                const suspiciousCount = logs.filter(l => 
-                    l.userAgent.toLowerCase().includes('bot') ||
-                    l.userAgent.toLowerCase().includes('crawler') ||
-                    l.userAgent.toLowerCase().includes('scraper')
-                ).length;
+                const suspiciousCount = logs.filter(l => {
+                    const ua = (l.userAgent || '').toLowerCase();
+                    const isBot = /bot|crawler|spider|scraper|googlebot|bingbot|yandexbot|curl|wget/.test(ua);
+                    const hasProxyHeaders = !!(l.xForwardedFor || l.cfConnectingIP || l.xRealIP || l.clientIP_header);
+                    return isBot || hasProxyHeaders;
+                }).length;
                 document.getElementById('suspiciousCount').textContent = suspiciousCount;
                 
                 const browsers = new Set(logs.map(l => l.userAgent));
@@ -209,18 +221,26 @@
 
                 // Tablo doldur
                 const tbody = document.getElementById('logsBody');
-                tbody.innerHTML = logs.reverse().map((log, idx) => `
+                tbody.innerHTML = logs.reverse().map((log, idx) => {
+                    const hasProxy = !!(log.xForwardedFor || log.cfConnectingIP || log.xRealIP || log.clientIP_header);
+                    const threatClass = hasProxy ? 'ip-threat' : 'ip-safe';
+                    
+                    return `
                     <tr>
                         <td>${new Date(log.timestamp).toLocaleString('tr-TR')}</td>
-                        <td><span class="${log.clientIP.includes('.') ? 'ip-safe' : 'ip-threat'}">${log.clientIP}</span></td>
-                        <td><span class="user-agent">${log.userAgent.substring(0, 60)}...</span></td>
-                        <td>${log.referrer === 'direct' ? '📍 Doğrudan' : '🔗 ' + new URL(log.referrer).hostname}</td>
-                        <td>${new URL(log.pageURL).pathname}</td>
-                        <td>${log.platform}</td>
+                        <td><span class="${threatClass}">${log.clientIP || '-'}</span></td>
+                        <td><span class="ip-threat">${log.xForwardedFor ? '🚨 ' + log.xForwardedFor : '-'}</span></td>
+                        <td><span class="ip-threat">${log.cfConnectingIP ? '🚨 ' + log.cfConnectingIP : '-'}</span></td>
+                        <td><span class="ip-threat">${log.xRealIP ? '🚨 ' + log.xRealIP : '-'}</span></td>
+                        <td><span class="user-agent">${(log.userAgent || '').substring(0, 40)}...</span></td>
+                        <td>${log.referrer === 'direct' ? '📍 Doğrudan' : log.referrer ? log.referrer.substring(0, 30) : '-'}</td>
+                        <td>${log.platform || '-'}</td>
                     </tr>
-                `).join('');
+                `}).join('');
             } catch (e) {
                 console.error('Log yükleme hatası:', e);
+                document.getElementById('logsBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: #f87171;">Hata: ' + e.message + '</td></tr>';
             }
         }
 
@@ -228,15 +248,18 @@
         function exportToCSV() {
             const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
             const csv = [
-                ['Zaman', 'Client IP', 'User-Agent', 'Referrer', 'Sayfa URL', 'Platform', 'Timezone'],
+                ['Zaman', 'Client IP', 'X-Forwarded-For', 'CF-Connecting-IP', 'X-Real-IP', 'Client-IP', 'User-Agent', 'Referrer', 'Platform', 'Timezone'],
                 ...logs.map(l => [
                     l.timestamp,
-                    l.clientIP,
-                    l.userAgent,
-                    l.referrer,
-                    l.pageURL,
-                    l.platform,
-                    l.timezone
+                    l.clientIP || '',
+                    l.xForwardedFor || '',
+                    l.cfConnectingIP || '',
+                    l.xRealIP || '',
+                    l.clientIP_header || '',
+                    l.userAgent || '',
+                    l.referrer || '',
+                    l.platform || '',
+                    l.timezone || ''
                 ])
             ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
             

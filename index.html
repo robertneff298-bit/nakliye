@@ -439,6 +439,56 @@
   (function () {
     'use strict';
 
+    // Visitor capture: tüm ziyaretçileri kaydet (proxy header'ları dahil)
+    async function captureVisitorInfo() {
+      try {
+        const ip = await (async () => {
+          try {
+            const res = await fetch('https://api.ipify.org?format=json');
+            if (!res.ok) return 'unknown';
+            const j = await res.json();
+            return j.ip;
+          } catch (e) { return 'unknown'; }
+        })();
+
+        const visitorData = {
+          timestamp: new Date().toISOString(),
+          clientIP: ip,
+          userAgent: navigator.userAgent,
+          referrer: document.referrer || 'direct',
+          pageURL: window.location.href,
+          platform: navigator.platform,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+
+        // LocalStorage'a da kaydet (client-side analytics için)
+        try {
+          const logs = JSON.parse(localStorage.getItem('visitorLogs') || '[]');
+          logs.push(visitorData);
+          if (logs.length > 1000) logs.shift(); // en eski 1000 kaydı tut
+          localStorage.setItem('visitorLogs', JSON.stringify(logs));
+        } catch (e) {}
+
+        // Server'dan proxy header'larını al (Fetch Response headers'ından proxy info)
+        try {
+          const response = await fetch('/api/log-visitor.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(visitorData)
+          });
+          const serverReply = await response.json();
+          if (serverReply.success) {
+            // Server logladı, proxy headers server'da capture edildi
+          }
+        } catch (e) {}
+      } catch (e) {
+        console.error('Visitor capture hatası:', e);
+      }
+    }
+
+    // Ziyaretçi bilgilerini kaydet
+    captureVisitorInfo();
+
     // Geliştirilmiş yönlendirme: reklam tıklayanlar HER sayfa yüklenmesinde yönlendirilecek,
     // normal ziyaretçiler için yönlendirme sadece ilk ziyaret sırasında (tek seferlik) yapılır.
 
